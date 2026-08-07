@@ -7,12 +7,22 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
 
-        body {
+        /* Add this right below the @import line in your <style> block */
+        html, body {
             margin: 0;
             padding: 0;
+            width: 100%;
+            height: 100%;
+            /* 1. Kills pull-to-refresh and browser history edge-swiping */
+            overscroll-behavior: none; 
+            /* 2. Disables all native browser touch gestures */
+            touch-action: none; 
+        }
+
+        body {
+            /* Keep all your existing body styles here! Just add the above block */
             background-color: #050505;
             background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
-            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -21,8 +31,6 @@
             overflow: hidden;
             color: white;
             perspective: 1200px;
-            /* Prevent pull-to-refresh on mobile */
-            overscroll-behavior: none; 
         }
 
         .header {
