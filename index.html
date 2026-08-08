@@ -605,4 +605,78 @@
             if (!isDragging) return;
             e.preventDefault(); // Prevent scrolling while using joystick
 
-            con
+            const pos = getEventPos(e);
+            let dx = pos.x - centerX;
+            let dy = pos.y - centerY;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Constrain visual stick to the base
+            if (distance > maxRadius) {
+                const ratio = maxRadius / distance;
+                dx *= ratio;
+                dy *= ratio;
+                distance = maxRadius;
+            }
+            
+            joystickStick.style.transform = `translate(${dx}px, ${dy}px)`;
+
+            // Allow a new move if they return the stick near the center
+            if (distance < resetRadius) {
+                joystickMoved = false; 
+            }
+
+            // Trigger move if pushed far enough
+            if (distance > triggerRadius && !joystickMoved) {
+                joystickMoved = true;
+                
+                // Determine direction based on angle
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                if (angle > -45 && angle <= 45) {
+                    move('right');
+                } else if (angle > 45 && angle <= 135) {
+                    move('down');
+                } else if (angle > 135 || angle <= -135) {
+                    move('left');
+                } else {
+                    move('up');
+                }
+            }
+        }
+
+        function handleEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+            joystickMoved = false;
+            
+            // Snap back to center
+            joystickStick.style.transition = 'transform 0.15s ease-out';
+            joystickStick.style.transform = `translate(0px, 0px)`;
+        }
+
+        // Attach Joystick Listeners
+        joystickBase.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', handleMove, { passive: false });
+        window.addEventListener('mouseup', handleEnd);
+
+        joystickBase.addEventListener('touchstart', handleStart, { passive: false });
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('touchend', handleEnd);
+
+        // Keyboard Controls
+        window.addEventListener('keydown', (e) => {
+            if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) {
+                e.preventDefault(); 
+            }
+            switch (e.key) {
+                case 'ArrowUp': move('up'); break;
+                case 'ArrowDown': move('down'); break;
+                case 'ArrowLeft': move('left'); break;
+                case 'ArrowRight': move('right'); break;
+            }
+        });
+
+        initGame();
+    </script>
+</body>
+</html>
