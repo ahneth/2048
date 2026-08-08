@@ -230,44 +230,52 @@
             box-shadow: 0 6px 25px rgba(255,0,0,0.8);
         }
 
-        /* --- DPAD CONTROLS --- */
-        .dpad-container {
-            display: grid;
-            grid-template-columns: 70px 70px 70px;
-            grid-template-rows: 70px 70px 70px;
-            gap: 10px;
-            margin-top: 40px;
+        /* --- VIRTUAL JOYSTICK --- */
+        #joystick-container {
+            margin-top: 30px;
             transform: translateZ(50px);
-        }
-
-        .dpad-btn {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            color: #fff;
-            border-radius: 12px;
-            font-size: 28px;
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1);
-            transition: transform 0.1s, background 0.1s;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            padding: 0;
-            outline: none;
+            touch-action: none; 
+            padding: 20px;
         }
 
-        .dpad-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 1px 5px rgba(0,0,0,0.9), inset 0 2px 4px rgba(0,0,0,0.5);
-            background: #2a2a2a;
+        #joystick-base {
+            width: 140px;
+            height: 140px;
+            background: #111;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 
+                inset 0 10px 25px rgba(0,0,0,1),
+                inset 0 -2px 5px rgba(255,255,255,0.1),
+                0 5px 15px rgba(0,0,0,0.6);
+            border: 2px solid #222;
+            cursor: grab;
         }
 
-        .btn-up { grid-column: 2; grid-row: 1; }
-        .btn-left { grid-column: 1; grid-row: 2; }
-        .btn-right { grid-column: 3; grid-row: 2; }
-        .btn-down { grid-column: 2; grid-row: 3; }
+        #joystick-base:active {
+            cursor: grabbing;
+        }
+
+        #joystick-stick {
+            width: 64px;
+            height: 64px;
+            background: radial-gradient(circle at 30% 30%, #555, #1a1a1a);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -32px;
+            margin-left: -32px;
+            box-shadow: 
+                0 10px 15px rgba(0,0,0,0.9),
+                inset 0 2px 5px rgba(255,255,255,0.3);
+            border: 1px solid #444;
+            pointer-events: none;
+            transition: transform 0.15s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -297,12 +305,11 @@
         </div>
     </div>
 
-    <!-- D-Pad Controls -->
-    <div class="dpad-container">
-        <button class="dpad-btn btn-up" onclick="move('up')">▲</button>
-        <button class="dpad-btn btn-left" onclick="move('left')">◀</button>
-        <button class="dpad-btn btn-right" onclick="move('right')">▶</button>
-        <button class="dpad-btn btn-down" onclick="move('down')">▼</button>
+    <!-- Virtual Joystick -->
+    <div id="joystick-container">
+        <div id="joystick-base">
+            <div id="joystick-stick"></div>
+        </div>
     </div>
 
     <script>
@@ -562,20 +569,40 @@
         // Restart Button Click
         restartBtn.addEventListener('click', initGame);
 
-        // Keyboard Controls
-        window.addEventListener('keydown', (e) => {
-            if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) {
-                e.preventDefault(); 
-            }
-            switch (e.key) {
-                case 'ArrowUp': move('up'); break;
-                case 'ArrowDown': move('down'); break;
-                case 'ArrowLeft': move('left'); break;
-                case 'ArrowRight': move('right'); break;
-            }
-        });
+        // --- JOYSTICK LOGIC ---
+        const joystickBase = document.getElementById('joystick-base');
+        const joystickStick = document.getElementById('joystick-stick');
+        
+        let isDragging = false;
+        let joystickMoved = false; 
+        
+        const maxRadius = 45;      // How far the stick can visually travel
+        const triggerRadius = 30;  // How far you must drag to trigger a move
+        const resetRadius = 15;    // Stick must return inside this radius to allow the next move
+        
+        let centerX, centerY;
 
-        initGame();
-    </script>
-</body>
-</html>
+        function getEventPos(e) {
+            if (e.touches && e.touches.length > 0) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            return { x: e.clientX, y: e.clientY };
+        }
+
+        function handleStart(e) {
+            if(e.target === restartBtn) return;
+            isDragging = true;
+            joystickMoved = false;
+            joystickStick.style.transition = 'none'; // Disable snapping animation while dragging
+            
+            const rect = joystickBase.getBoundingClientRect();
+            centerX = rect.left + rect.width / 2;
+            centerY = rect.top + rect.height / 2;
+            handleMove(e);
+        }
+
+        function handleMove(e) {
+            if (!isDragging) return;
+            e.preventDefault(); // Prevent scrolling while using joystick
+
+            con
