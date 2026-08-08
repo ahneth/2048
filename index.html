@@ -164,8 +164,8 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
-            pointer-events: none; /* Lets clicks pass through empty spaces */
-            z-index: 150; /* Above canvas, below Game Over */
+            pointer-events: none; 
+            z-index: 150; 
             padding: 10px;
             box-sizing: border-box;
             transform: translateZ(50px);
@@ -180,7 +180,7 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            pointer-events: auto; /* Re-enable pointer for the buttons */
+            pointer-events: auto; 
             transition: all 0.1s ease;
             border-radius: 12px;
             margin: 5px;
@@ -267,7 +267,7 @@
             transition: all 0.2s;
             text-transform: uppercase;
             letter-spacing: 2px;
-            pointer-events: auto;
+            /* Bug fix: removed 'pointer-events: auto' so it isn't clickable when invisible */
         }
 
         #restart-btn:hover {
@@ -327,6 +327,7 @@
         bestScoreElement.textContent = bestScore;
         let tileIdCounter = 0;
         let isGameOver = false;
+        let isMoving = false; // Bug fix: prevents processing moves while animations resolve
 
         const size = 4;
         const cellSize = 90;
@@ -351,6 +352,7 @@
             gridContainer.innerHTML = '';
             gameOverOverlay.classList.remove('show');
             isGameOver = false;
+            isMoving = false;
             
             for (let r = 0; r < size; r++) {
                 for (let c = 0; c < size; c++) {
@@ -389,11 +391,9 @@
             createTile(r, c, value);
         }
 
-        function createTile(r, c, value, isMerged = false) {
+        function createTile(r, c, value) {
             const tile = document.createElement('div');
-            tile.className = 'tile';
-            if (isMerged) tile.classList.add('tile-merged');
-            else tile.classList.add('tile-new');
+            tile.className = 'tile tile-new';
 
             const id = `tile-${tileIdCounter++}`;
             tile.id = id;
@@ -488,7 +488,7 @@
         animateParticles();
 
         function move(direction) {
-            if (isGameOver) return;
+            if (isGameOver || isMoving) return;
             let moved = false;
 
             for (let i = 0; i < size; i++) {
@@ -534,14 +534,27 @@
 
                     if (target.merged) {
                         moved = true;
-                        board[r][c] = null;
+                        
+                        // Bug fix: Update internal board logic IMMEDIATELY so fast moves don't break
+                        const tile = document.createElement('div');
+                        tile.className = 'tile tile-merged';
+                        tile.style.opacity = '0'; // hide briefly while old tiles slide
+                        const id = `tile-${tileIdCounter++}`;
+                        tile.id = id;
+                        
+                        updateTileDOM(tile, r, c, target.value);
+                        gridContainer.appendChild(tile);
+                        board[r][c] = { id, value: target.value, element: tile };
+
+                        // Slide old tiles to merge spot
                         target.elementsToDestroy.forEach(t => {
                             updateTileDOM(t.element, r, c, t.value);
                             setTimeout(() => t.element.remove(), 150);
                         });
                         
+                        // Reveal new tile after slide
                         setTimeout(() => {
-                            createTile(r, c, target.value, true);
+                            tile.style.opacity = '1';
                             createExplosion(r, c, colors[target.value] || '#fff');
                         }, 150);
                     } else if (target.r !== r || target.c !== c) {
@@ -555,6 +568,7 @@
             }
 
             if (moved) {
+                isMoving = true; // Block inputs momentarily
                 updateScore();
                 setTimeout(() => {
                     addRandomTile();
@@ -562,14 +576,15 @@
                         isGameOver = true;
                         gameOverOverlay.classList.add('show');
                     }
-                }, 200);
+                    isMoving = false; // Allow input again
+                }, 160); // Trigger just after the 150ms slide animations complete
             }
         }
 
         // Restart Button Click
         restartBtn.addEventListener('click', initGame);
 
-        // Keyboard Controls
+          // Keyboard Controls
         window.addEventListener('keydown', (e) => {
             if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) {
                 e.preventDefault(); 
