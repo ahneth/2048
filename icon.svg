@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- name: icon.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ffcc00" />
+      <stop offset="50%" stop-color="#ff8c00" />
+      <stop offset="100%" stop-color="#ff3b3b" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity="0.6" />
+    </filter>
+  </defs>
+  <!-- Background rounded tile -->
+  <rect x="36" y="36" width="440" height="440" rx="48" ry="48" fill="#111" />
+
+  <!-- Inner glossy plate -->
+  <rect x="64" y="64" width="384" height="384" rx="36" ry="36" fill="url(#g)" filter="url(#shadow)" />
+
+  <!-- Subtle highlight -->
+  <rect x="64" y="64" width="384" height="200" rx="36" ry="36" fill="rgba(255,255,255,0.12)" />
+
+  <!-- 3D inset stroke -->
+  <rect x="64" y="64" width="384" height="384" rx="36" ry="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6" />
+
+  <!-- Large 2048 text -->
+  <text x="256" y="300" font-family="Poppins, Arial, Helvetica, sans-serif" font-weight="700" font-size="120" text-anchor="middle" fill="#111" stroke="#ffffff" stroke-width="2" paint-order="stroke">
+    2048
+  </text>
+
+  <!-- Small glossy reflection -->
+  <ellipse cx="220" cy="150" rx="120" ry="30" fill="rgba(255,255,255,0.08)" />
+
+</svg>
